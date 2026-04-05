@@ -278,6 +278,20 @@ Partial Class FrmKiosk
     End Sub
 
     ' ============================================================
+    '  CLEAR CART
+    ' ============================================================
+    Private Sub BtnClearCart_Click(sender As Object, e As EventArgs) Handles btnClearCart.Click
+        If _cart.Count = 0 Then Return
+        Dim confirm = MessageBox.Show("Remove all items from your cart?", "Clear Cart",
+                                     MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If confirm = DialogResult.Yes Then
+            _cart.Clear()
+            RefreshCartUI()
+            ShowToast("🗑  Cart cleared")
+        End If
+    End Sub
+
+    ' ============================================================
     '  CHECKOUT
     ' ============================================================
     Private Sub BtnCheckout_Click(sender As Object, e As EventArgs) Handles btnCheckout.Click

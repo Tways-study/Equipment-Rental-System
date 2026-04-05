@@ -252,7 +252,6 @@ Press **F5** to launch. The kiosk opens immediately.
 | Field | Value |
 |---|---|
 | Username | `admin` |
-| Password | `admin123` |
 | Access | Press `F12` on the kiosk screen |
 
 > Passwords are stored as SHA-256 hashes. To add a new admin run:

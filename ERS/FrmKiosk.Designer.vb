@@ -29,6 +29,7 @@ Partial Class FrmKiosk
         Me.lblDeposit = New System.Windows.Forms.Label()
         Me.lblTotal = New System.Windows.Forms.Label()
         Me.btnCheckout = New System.Windows.Forms.Button()
+        Me.btnClearCart = New System.Windows.Forms.Button()
         Me.pnlHeader.SuspendLayout()
         CType(Me.MainSplitter, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainSplitter.Panel1.SuspendLayout()
@@ -172,6 +173,21 @@ Partial Class FrmKiosk
         Me.btnCheckout.Text = "PROCEED TO CHECKOUT →"
         Me.btnCheckout.UseVisualStyleBackColor = False
         '
+        ' btnClearCart
+        '
+        Me.btnClearCart.BackColor = System.Drawing.Color.FromArgb(180, 30, 30)
+        Me.btnClearCart.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnClearCart.FlatAppearance.BorderSize = 0
+        Me.btnClearCart.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnClearCart.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
+        Me.btnClearCart.ForeColor = System.Drawing.Color.White
+        Me.btnClearCart.Location = New System.Drawing.Point(296, 100)
+        Me.btnClearCart.Name = "btnClearCart"
+        Me.btnClearCart.Size = New System.Drawing.Size(114, 48)
+        Me.btnClearCart.TabIndex = 4
+        Me.btnClearCart.Text = "🗑 Clear Cart"
+        Me.btnClearCart.UseVisualStyleBackColor = False
+        '
         ' pnlCartBottom  (DockStyle.Bottom inside Panel2)
         '
         Me.pnlCartBottom.BackColor = System.Drawing.Color.White
@@ -179,6 +195,7 @@ Partial Class FrmKiosk
         Me.pnlCartBottom.Controls.Add(Me.lblDeposit)
         Me.pnlCartBottom.Controls.Add(Me.lblTotal)
         Me.pnlCartBottom.Controls.Add(Me.btnCheckout)
+        Me.pnlCartBottom.Controls.Add(Me.btnClearCart)
         Me.pnlCartBottom.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.pnlCartBottom.Location = New System.Drawing.Point(12, 533)
         Me.pnlCartBottom.Name = "pnlCartBottom"
@@ -243,5 +260,6 @@ Partial Class FrmKiosk
     Friend WithEvents lblDeposit As System.Windows.Forms.Label
     Friend WithEvents lblTotal As System.Windows.Forms.Label
     Friend WithEvents btnCheckout As System.Windows.Forms.Button
+    Friend WithEvents btnClearCart As System.Windows.Forms.Button
 
 End Class
