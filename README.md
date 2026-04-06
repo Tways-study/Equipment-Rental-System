@@ -116,5 +116,3 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 - If the catalog shows emoji as `?`, ensure `CharSet=utf8mb4` is present in `App.config` connection string and your database/tables use `utf8mb4`.
 
 ---
-
-If you want, I can commit this README change and push to `origin/main` with a commit message you provide. Tell me to proceed and provide the commit message.
