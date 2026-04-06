@@ -6,6 +6,7 @@ Public Class FrmCheckout
     Private ReadOnly OrangeColor As Color = ColorTranslator.FromHtml("#F47C20")
 
     Private _cart As List(Of CartItem)
+    Private _initialDays As Integer = 1
     Private txtName As TextBox
     Private txtContact As TextBox
     Private dtpStart As DateTimePicker
@@ -14,8 +15,9 @@ Public Class FrmCheckout
     Private lblGrandTotal As Label
     Private btnConfirm As Button
 
-    Public Sub New(cart As List(Of CartItem))
+    Public Sub New(cart As List(Of CartItem), days As Integer)
         _cart = cart
+        _initialDays = days
         InitUI()
     End Sub
 
@@ -65,7 +67,7 @@ Public Class FrmCheckout
         Controls.Add(MakeLabel("Rental End Date", 270, y - 24))
         dtpEnd = New DateTimePicker With {
             .Location = New Point(270, y), .Size = New Size(250, 30),
-            .Format = DateTimePickerFormat.Short, .Value = Date.Today.AddDays(1),
+            .Format = DateTimePickerFormat.Short, .Value = Date.Today.AddDays(_initialDays),
             .MinDate = Date.Today.AddDays(1)}
         Controls.Add(dtpEnd)
         AddHandler dtpEnd.ValueChanged, AddressOf Dates_Changed

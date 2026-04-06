@@ -14,6 +14,7 @@ Partial Class FrmKiosk
     Private _cart As New List(Of CartItem)()
     Private _currentCategory As String = Nothing
     Private _toastTimer As Timer
+    Private _rentalDays As Integer = 1
 
     ' ============================================================
     '  CONSTRUCTOR
@@ -247,11 +248,11 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub RecalcTotals()
-        ' Without date range we show per-day subtotal
-        Dim sub1 As Decimal = _cart.Sum(Function(ci) ci.Equipment.DailyRate * ci.Quantity)
-        lblSubtotal.Text = $"Subtotal: ₱{sub1:N2}  /day"
+        Dim dailySub As Decimal = _cart.Sum(Function(ci) ci.Equipment.DailyRate * ci.Quantity)
+        Dim sub1 As Decimal = dailySub * _rentalDays
+        lblSubtotal.Text = $"Subtotal: ₱{sub1:N2}  ({_rentalDays}d)"
         lblDeposit.Text = "Security Deposit: ₱500.00"
-        lblTotal.Text = $"Total: ₱{sub1 + 500D:N2}  + days"
+        lblTotal.Text = $"Total: ₱{sub1 + 500D:N2}"
     End Sub
 
     ' ============================================================
@@ -278,6 +279,25 @@ Partial Class FrmKiosk
     End Sub
 
     ' ============================================================
+    '  RENTAL DAYS STEPPER
+    ' ============================================================
+    Private Sub BtnDaysDown_Click(sender As Object, e As EventArgs) Handles btnDaysDown.Click
+        If _rentalDays > 1 Then
+            _rentalDays -= 1
+            lblDaysValue.Text = _rentalDays.ToString()
+            RecalcTotals()
+        End If
+    End Sub
+
+    Private Sub BtnDaysUp_Click(sender As Object, e As EventArgs) Handles btnDaysUp.Click
+        If _rentalDays < 365 Then
+            _rentalDays += 1
+            lblDaysValue.Text = _rentalDays.ToString()
+            RecalcTotals()
+        End If
+    End Sub
+
+    ' ============================================================
     '  CLEAR CART
     ' ============================================================
     Private Sub BtnClearCart_Click(sender As Object, e As EventArgs) Handles btnClearCart.Click
@@ -299,7 +319,7 @@ Partial Class FrmKiosk
             MessageBox.Show("Your cart is empty.", "Cart Empty", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Return
         End If
-        Dim frm As New FrmCheckout(_cart)
+        Dim frm As New FrmCheckout(_cart, _rentalDays)
         If frm.ShowDialog(Me) = DialogResult.OK Then
             _cart.Clear()
             RefreshCartUI()

@@ -30,6 +30,10 @@ Partial Class FrmKiosk
         Me.lblTotal = New System.Windows.Forms.Label()
         Me.btnCheckout = New System.Windows.Forms.Button()
         Me.btnClearCart = New System.Windows.Forms.Button()
+        Me.lblDaysLabel = New System.Windows.Forms.Label()
+        Me.btnDaysDown = New System.Windows.Forms.Button()
+        Me.lblDaysValue = New System.Windows.Forms.Label()
+        Me.btnDaysUp = New System.Windows.Forms.Button()
         Me.pnlHeader.SuspendLayout()
         CType(Me.MainSplitter, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainSplitter.Panel1.SuspendLayout()
@@ -130,7 +134,7 @@ Partial Class FrmKiosk
         Me.lblSubtotal.AutoSize = True
         Me.lblSubtotal.Font = New System.Drawing.Font("Segoe UI", 10.0!)
         Me.lblSubtotal.ForeColor = System.Drawing.Color.Gray
-        Me.lblSubtotal.Location = New System.Drawing.Point(8, 8)
+        Me.lblSubtotal.Location = New System.Drawing.Point(8, 44)
         Me.lblSubtotal.Name = "lblSubtotal"
         Me.lblSubtotal.Size = New System.Drawing.Size(100, 17)
         Me.lblSubtotal.TabIndex = 0
@@ -141,7 +145,7 @@ Partial Class FrmKiosk
         Me.lblDeposit.AutoSize = True
         Me.lblDeposit.Font = New System.Drawing.Font("Segoe UI", 10.0!)
         Me.lblDeposit.ForeColor = System.Drawing.Color.Gray
-        Me.lblDeposit.Location = New System.Drawing.Point(8, 32)
+        Me.lblDeposit.Location = New System.Drawing.Point(8, 68)
         Me.lblDeposit.Name = "lblDeposit"
         Me.lblDeposit.Size = New System.Drawing.Size(170, 17)
         Me.lblDeposit.TabIndex = 1
@@ -152,7 +156,7 @@ Partial Class FrmKiosk
         Me.lblTotal.AutoSize = True
         Me.lblTotal.Font = New System.Drawing.Font("Segoe UI", 13.0!, System.Drawing.FontStyle.Bold)
         Me.lblTotal.ForeColor = System.Drawing.ColorTranslator.FromHtml("#1E3A5F")
-        Me.lblTotal.Location = New System.Drawing.Point(8, 60)
+        Me.lblTotal.Location = New System.Drawing.Point(8, 96)
         Me.lblTotal.Name = "lblTotal"
         Me.lblTotal.Size = New System.Drawing.Size(140, 22)
         Me.lblTotal.TabIndex = 2
@@ -166,7 +170,7 @@ Partial Class FrmKiosk
         Me.btnCheckout.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnCheckout.Font = New System.Drawing.Font("Segoe UI", 11.0!, System.Drawing.FontStyle.Bold)
         Me.btnCheckout.ForeColor = System.Drawing.Color.White
-        Me.btnCheckout.Location = New System.Drawing.Point(8, 100)
+        Me.btnCheckout.Location = New System.Drawing.Point(8, 136)
         Me.btnCheckout.Name = "btnCheckout"
         Me.btnCheckout.Size = New System.Drawing.Size(280, 48)
         Me.btnCheckout.TabIndex = 3
@@ -181,7 +185,7 @@ Partial Class FrmKiosk
         Me.btnClearCart.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnClearCart.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
         Me.btnClearCart.ForeColor = System.Drawing.Color.White
-        Me.btnClearCart.Location = New System.Drawing.Point(296, 100)
+        Me.btnClearCart.Location = New System.Drawing.Point(296, 136)
         Me.btnClearCart.Name = "btnClearCart"
         Me.btnClearCart.Size = New System.Drawing.Size(114, 48)
         Me.btnClearCart.TabIndex = 4
@@ -190,16 +194,68 @@ Partial Class FrmKiosk
         '
         ' pnlCartBottom  (DockStyle.Bottom inside Panel2)
         '
+        '
+        ' lblDaysLabel
+        '
+        Me.lblDaysLabel.AutoSize = True
+        Me.lblDaysLabel.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
+        Me.lblDaysLabel.ForeColor = System.Drawing.Color.Gray
+        Me.lblDaysLabel.Location = New System.Drawing.Point(8, 14)
+        Me.lblDaysLabel.Name = "lblDaysLabel"
+        Me.lblDaysLabel.TabIndex = 5
+        Me.lblDaysLabel.Text = "Rental Days:"
+        '
+        ' btnDaysDown
+        '
+        Me.btnDaysDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnDaysDown.Font = New System.Drawing.Font("Segoe UI", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.btnDaysDown.ForeColor = System.Drawing.ColorTranslator.FromHtml("#1E3A5F")
+        Me.btnDaysDown.Location = New System.Drawing.Point(108, 6)
+        Me.btnDaysDown.Name = "btnDaysDown"
+        Me.btnDaysDown.Size = New System.Drawing.Size(28, 28)
+        Me.btnDaysDown.TabIndex = 6
+        Me.btnDaysDown.Text = "−"
+        Me.btnDaysDown.FlatAppearance.BorderColor = System.Drawing.Color.LightGray
+        '
+        ' lblDaysValue
+        '
+        Me.lblDaysValue.Font = New System.Drawing.Font("Segoe UI", 11.0!, System.Drawing.FontStyle.Bold)
+        Me.lblDaysValue.ForeColor = System.Drawing.ColorTranslator.FromHtml("#1E3A5F")
+        Me.lblDaysValue.Location = New System.Drawing.Point(138, 6)
+        Me.lblDaysValue.Name = "lblDaysValue"
+        Me.lblDaysValue.Size = New System.Drawing.Size(34, 28)
+        Me.lblDaysValue.TabIndex = 7
+        Me.lblDaysValue.Text = "1"
+        Me.lblDaysValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
+        ' btnDaysUp
+        '
+        Me.btnDaysUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnDaysUp.Font = New System.Drawing.Font("Segoe UI", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.btnDaysUp.ForeColor = System.Drawing.ColorTranslator.FromHtml("#1E3A5F")
+        Me.btnDaysUp.Location = New System.Drawing.Point(174, 6)
+        Me.btnDaysUp.Name = "btnDaysUp"
+        Me.btnDaysUp.Size = New System.Drawing.Size(28, 28)
+        Me.btnDaysUp.TabIndex = 8
+        Me.btnDaysUp.Text = "+"
+        Me.btnDaysUp.FlatAppearance.BorderColor = System.Drawing.Color.LightGray
+        '
+        ' pnlCartBottom
+        '
         Me.pnlCartBottom.BackColor = System.Drawing.Color.White
         Me.pnlCartBottom.Controls.Add(Me.lblSubtotal)
         Me.pnlCartBottom.Controls.Add(Me.lblDeposit)
         Me.pnlCartBottom.Controls.Add(Me.lblTotal)
+        Me.pnlCartBottom.Controls.Add(Me.lblDaysLabel)
+        Me.pnlCartBottom.Controls.Add(Me.btnDaysDown)
+        Me.pnlCartBottom.Controls.Add(Me.lblDaysValue)
+        Me.pnlCartBottom.Controls.Add(Me.btnDaysUp)
         Me.pnlCartBottom.Controls.Add(Me.btnCheckout)
         Me.pnlCartBottom.Controls.Add(Me.btnClearCart)
         Me.pnlCartBottom.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.pnlCartBottom.Location = New System.Drawing.Point(12, 533)
+        Me.pnlCartBottom.Location = New System.Drawing.Point(12, 497)
         Me.pnlCartBottom.Name = "pnlCartBottom"
-        Me.pnlCartBottom.Size = New System.Drawing.Size(418, 160)
+        Me.pnlCartBottom.Size = New System.Drawing.Size(418, 196)
         Me.pnlCartBottom.TabIndex = 2
         '
         ' MainSplitter.Panel2
@@ -261,5 +317,9 @@ Partial Class FrmKiosk
     Friend WithEvents lblTotal As System.Windows.Forms.Label
     Friend WithEvents btnCheckout As System.Windows.Forms.Button
     Friend WithEvents btnClearCart As System.Windows.Forms.Button
+    Friend WithEvents lblDaysLabel As System.Windows.Forms.Label
+    Friend WithEvents btnDaysDown As System.Windows.Forms.Button
+    Friend WithEvents lblDaysValue As System.Windows.Forms.Label
+    Friend WithEvents btnDaysUp As System.Windows.Forms.Button
 
 End Class

@@ -61,7 +61,7 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
   - `RentalManager.vb` — customer-facing DB logic (load catalog, create booking transaction).
   - `AdminManager.vb` — admin DB logic (login, stats, rentals listing, return/cancel, equipment CRUD).
   - `FrmKiosk.vb` & `FrmKiosk.Designer.vb` — kiosk UI (designer holds static controls; code-behind builds dynamic UI at runtime).
-  - `FrmCheckout.vb`, `FrmConfirmation.vb` — checkout flow and confirmation UI.
+  - `FrmCheckout.vb`, `FrmConfirmation.vb` — checkout flow and confirmation UI. `FrmCheckout(cart, days)` accepts the rental days from the kiosk and pre-populates `dtpEnd` as `today + days`.
   - `FrmAdminLogin.vb`, `FrmAdminDashboard.vb`, `FrmManageEquipment.vb` — admin UI screens.
 
 ---
@@ -94,13 +94,17 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
   - Equipment CRUD: `LoadAllEquipment()`, `AddEquipment()`, `UpdateEquipment()`, `DeleteEquipment()` (soft delete via `is_active = 0`).
 
 - `FrmKiosk` (UI)
-  - `FrmKiosk.Designer.vb` contains static controls created in the WinForms designer (header, splitter, cart panel, checkout and clear cart buttons).
-  - `FrmKiosk.vb` (code-behind) contains runtime UI builders:
+  - `FrmKiosk.Designer.vb` contains static controls: header, splitter, cart panel, **Rental Days stepper** (`btnDaysDown`, `lblDaysValue`, `btnDaysUp`), checkout button, and clear cart button.
+  - `FrmKiosk.vb` (code-behind) contains runtime UI builders and state:
+    - `_rentalDays` — integer state (default 1, min 1, max 365) tracking the selected rental duration.
     - `AddFilterPills()` — creates category pill `Button` controls and adds them to `pnlFilterBar` at runtime.
     - `RenderGrid()` — reads `_allEquipment` and creates a card `Panel` for each `EquipmentItem` at runtime (icon, name, rate, stock, Add button).
-    - `RefreshCartUI()` — rebuilds cart rows dynamically with `+` and `−` controls; calls `RecalcTotals()`.
-    - `ShowToast()` — shows temporary green notification labels.
-  - Note: dynamic controls are not visible in Visual Studio designer. The designer only shows static controls placed in `InitializeComponent()`.
+    - `RefreshCartUI()` — rebuilds cart rows dynamically with `+` and `−` quantity controls; calls `RecalcTotals()`.
+    - `RecalcTotals()` — recomputes subtotal as `daily_rate × quantity × _rentalDays` and updates all total labels live.
+    - `BtnDaysDown_Click` / `BtnDaysUp_Click` — decrement/increment `_rentalDays` and trigger `RecalcTotals()` immediately.
+    - `BtnClearCart_Click` — prompts confirmation then clears all cart items.
+    - `ShowToast()` — shows a temporary green notification label, auto-dismisses after 2 seconds.
+  - Note: dynamic controls are not visible in the Visual Studio designer. The designer only shows static controls placed in `InitializeComponent()`.
 
 ---
 
@@ -116,8 +120,3 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 - If the catalog shows emoji as `?`, ensure `CharSet=utf8mb4` is present in `App.config` connection string and your database/tables use `utf8mb4`.
 
 ---
-<<<<<<< HEAD
-
-
-=======
->>>>>>> dfe499ba688333b89f9f79b7130152b361aaa71f
