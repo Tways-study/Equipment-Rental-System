@@ -1,5 +1,7 @@
 # 2C Rentals — Equipment Rental System
 
+> **Repository:** https://github.com/Tways-study/Equipment-Rental-System
+
 A dual-interface desktop equipment rental system built with **Visual Basic .NET (WinForms)** and **MySQL**. Designed for physical kiosk use with a separate password-protected admin panel.
 
 ---
@@ -67,7 +69,7 @@ A dual-interface desktop equipment rental system built with **Visual Basic .NET 
 ## Folder Structure
 
 ```
-2C-Rentals/
+Equipment-Rental-System/
 │
 ├── README.md
 │
@@ -193,8 +195,8 @@ admins         (admin_id PK, username UNIQUE, password_hash, full_name)
 ### Step 1 — Clone the repository
 
 ```sh
-git clone https://github.com/your-username/2C-Rentals.git
-cd 2C-Rentals
+git clone https://github.com/Tways-study/Equipment-Rental-System.git
+cd Equipment-Rental-System
 ```
 
 ### Step 2 — Set up the database
