@@ -118,5 +118,8 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 ## Run-time notes and troubleshooting
 - If build fails with file-lock errors (MSBuild MSB3027/MSB3021), ensure the program executable is not running and no external process is holding the file (e.g., security software). Close running instances and try rebuilding.
 - If the catalog shows emoji as `?`, ensure `CharSet=utf8mb4` is present in `App.config` connection string and your database/tables use `utf8mb4`.
+<<<<<<< HEAD
 
 ---
+=======
+>>>>>>> f6d50c7d0c3c5398561f6b95f06d9e8793e49c95
