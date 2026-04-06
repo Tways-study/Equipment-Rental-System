@@ -117,4 +117,4 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 
 ---
 
-If you want, I can commit this README change and push to `origin/main` with a commit message you provide. Tell me to proceed and provide the commit message.
+

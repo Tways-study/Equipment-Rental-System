@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS admins (
 -- Equipment
 INSERT INTO equipment (name, category, daily_rate, total_stock, avail_stock, icon_tag) VALUES
 ('Executive Chair',    'Seating',      250.00, 20, 20, '🪑'),
-('Banquet Table',      'Tables',       450.00, 15, 15, '🏗'),
+('Banquet Table',      'Tables',       450.00, 15, 15, '🍴'),
 ('PA System',          'Audio/Visual', 1200.00, 5,  5,  '🎵'),
 ('4K Projector',       'Audio/Visual', 2500.00, 3,  3,  '📽'),
 ('Outdoor Umbrella',   'Tables',       350.00, 10, 10, '☂'),
