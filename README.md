@@ -94,7 +94,7 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
   - Equipment CRUD: `LoadAllEquipment()`, `AddEquipment()`, `UpdateEquipment()`, `DeleteEquipment()` (soft delete via `is_active = 0`).
 
 - `FrmKiosk` (UI)
-  - `FrmKiosk.Designer.vb` contains static controls: header, splitter, cart panel, **Rental Days stepper** (`btnDaysDown`, `lblDaysValue`, `btnDaysUp`), checkout button, and clear cart button.
+  - `FrmKiosk.Designer.vb` contains static controls: header, splitter, cart panel, **Rental Days stegit pper** (`btnDaysDown`, `lblDaysValue`, `btnDaysUp`), checkout button, and clear cart button.
   - `FrmKiosk.vb` (code-behind) contains runtime UI builders and state:
     - `_rentalDays` — integer state (default 1, min 1, max 365) tracking the selected rental duration.
     - `AddFilterPills()` — creates category pill `Button` controls and adds them to `pnlFilterBar` at runtime.
@@ -121,4 +121,3 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 <<<<<<< HEAD
 
 ---
-=======
