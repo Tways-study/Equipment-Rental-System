@@ -122,4 +122,3 @@ VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
 
 ---
 =======
->>>>>>> f6d50c7d0c3c5398561f6b95f06d9e8793e49c95
