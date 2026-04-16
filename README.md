@@ -170,8 +170,8 @@ The kiosk form (`FrmKiosk`) opens by default. Press **F12** on the kiosk screen 
 
 | Field    | Value      |
 | -------- | ---------- |
-| Username | `admin`    |
-| Password | `admin123` |
+| Username | `****`    |
+| Password | `****` |
 
 > Change the admin password after first login. To add additional admin accounts via SQL:
 >
