@@ -1,6 +1,6 @@
-# ERS — Equipment Rental System (2C Rentals)
+# 2C Rentals — Equipment Rental System
 
-A Windows desktop application that provides a self-service kiosk for customers to browse and book rental equipment, paired with a secure admin portal for managing inventory, tracking rental statuses, and processing returns.
+**2C Rentals** is a Windows desktop application built for a small equipment rental business. It provides a touch-friendly self-service kiosk where customers can browse available gear, build a cart, and complete a rental booking — all without staff involvement. A separate, password-protected admin portal lets staff manage the equipment catalog, monitor active and overdue rentals, and process returns or cancellations with automatic stock restoration.
 
 > **Repository:** https://github.com/Tways-study/Equipment-Rental-System
 
@@ -8,55 +8,87 @@ A Windows desktop application that provides a self-service kiosk for customers t
 
 ## Tech Stack
 
-| Category          | Technology                                                |
-| ----------------- | --------------------------------------------------------- |
-| **Framework**     | .NET 10 (`net10.0-windows`)                               |
-| **Language**      | VB.NET                                                    |
-| **UI**            | Windows Forms (WinForms)                                  |
-| **Database**      | MySQL (`twoc_rentals_db`)                                 |
-| **DB Driver**     | MySql.Data v9.6.0                                         |
-| **Configuration** | System.Configuration.ConfigurationManager v9.0.4          |
-| **Security**      | SHA-256 password hashing (`System.Security.Cryptography`) |
+| Category      | Technology                                                  |
+| ------------- | ----------------------------------------------------------- |
+| **Framework** | .NET 10 (`net10.0-windows`)                                 |
+| **Language**  | VB.NET                                                      |
+| **UI**        | Windows Forms (WinForms)                                    |
+| **Database**  | MySQL 8+ — schema: `twoc_rentals_db`                        |
+| **DB Driver** | `MySql.Data` v9.6.0                                         |
+| **Config**    | `System.Configuration.ConfigurationManager` v9.0.4          |
+| **Security**  | SHA-256 password hashing via `System.Security.Cryptography` |
 
 ---
 
 ## Architecture & System Relationships
 
-The application follows a **layered Windows Forms architecture**, separating UI concerns from data access logic:
+The project is structured in three distinct layers — UI forms, business/service classes, and a database abstraction — keeping SQL entirely out of form code.
 
 ```
-[Customer Flow]
-FrmKiosk  →  FrmCheckout  →  FrmConfirmation
+┌─────────────────────────────── Customer Flow ───────────────────────────────┐
+│  FrmKiosk  ──►  FrmCheckout  ──►  FrmConfirmation                           │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-[Admin Flow]
-FrmAdminLogin  →  FrmAdminDashboard  →  FrmManageEquipment
+┌──────────────────────────────── Admin Flow ─────────────────────────────────┐
+│  FrmAdminLogin  ──►  FrmAdminDashboard  ──►  FrmManageEquipment             │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-        ↓ both flows call ↓
+             Both flows call into the Business / Data Layer:
 
-[Business / Data Layer]
-RentalManager.vb          AdminManager.vb
-
-        ↓ both call ↓
-
-[Database Abstraction]
-DBConnection.vb  ←  App.config (connection string)
-
-        ↓
-
-[MySQL: twoc_rentals_db]
-customers | equipment | rentals | rental_details | admins
+             RentalManager.vb          AdminManager.vb
+                        │                    │
+                        └────────┬───────────┘
+                                 ▼
+                          DBConnection.vb
+                          (reads App.config)
+                                 │
+                                 ▼
+                     MySQL: twoc_rentals_db
+            ┌──────────┬───────────┬─────────┬────────────────┬────────┐
+            │customers │ equipment │ rentals │ rental_details │ admins │
+            └──────────┴───────────┴─────────┴────────────────┴────────┘
 ```
 
-**Data flow walkthrough:**
+### How the pieces communicate
 
-1. **Equipment browsing** — `FrmKiosk` calls `RentalManager.LoadEquipment()` on load, rendering available items as card tiles. Category filter pills narrow results with a server-side `WHERE category = @cat` clause.
-2. **Cart & Checkout** — selected items are held in memory as a `List(Of CartItem)`. On checkout, `FrmCheckout` collects the customer's name, contact number, and rental dates.
-3. **Atomic booking** — `RentalManager.CreateBooking()` wraps four operations inside a single MySQL **transaction**: insert `customers` → insert `rentals` header → insert `rental_details` line items → decrement `avail_stock`. If any step fails the transaction rolls back, preserving data integrity.
-4. **Admin authentication** — `FrmAdminLogin` passes credentials to `AdminManager.ValidateLogin()`, which hashes the password with `HashHelper.ComputeSHA256()` and compares against the stored hash using a parameterized query. No plaintext passwords are stored or transmitted.
-5. **Admin dashboard** — `FrmAdminDashboard` calls `AdminManager.UpdateOverdueRentals()` on load to auto-flag past-due rentals, then displays live stats via `AdminManager.GetStats()`.
-6. **Configuration** — The connection string is stored in `App.config` under the key `TwoCRentals`. `DBConnection.GetConnection()` reads it at runtime, keeping database configuration separate from business logic.
+| Interaction           | Detail                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Kiosk → DB**        | `FrmKiosk.OnLoad` calls `RentalManager.LoadEquipment(category?)`. The optional category parameter maps to a server-side `WHERE category = @cat` clause so only one round trip is made per filter change.                                                                                                                                                                                                                          |
+| **Cart**              | Items are kept as an in-memory `List(Of CartItem)`. Each `CartItem` holds an `EquipmentItem` reference and a quantity. `LineTotal(days)` returns `DailyRate × Quantity × days`. Grand total = subtotal + fixed ₱500 security deposit.                                                                                                                                                                                             |
+| **Atomic booking**    | `RentalManager.CreateBooking()` opens a single MySQL transaction and executes four steps: ① insert `customers` row → ② insert `rentals` header with generated booking code → ③ insert one `rental_details` row per cart item → ④ decrement `avail_stock` with `WHERE avail_stock >= @qty`. If that last `UPDATE` affects 0 rows, an `InvalidOperationException` is raised and the transaction rolls back, preventing overselling. |
+| **Booking codes**     | `GenerateBookingCode()` builds a `BK-YYYYMMDD-NNNN` string. It counts same-day bookings already in the database to assign a sequential four-digit suffix (e.g., `BK-20260416-0003`).                                                                                                                                                                                                                                              |
+| **Admin auth**        | `AdminManager.ValidateLogin()` hashes the submitted password with `HashHelper.ComputeSHA256()` and executes `SELECT full_name FROM admins WHERE username = @u AND password_hash = @h`. No plaintext passwords are ever stored or compared.                                                                                                                                                                                        |
+| **Overdue detection** | On every open of `FrmAdminDashboard`, `AdminManager.UpdateOverdueRentals()` runs `UPDATE rentals SET status = 'Overdue' WHERE rental_end < CURDATE() AND status = 'Active'`, keeping the status column accurate without a scheduled job.                                                                                                                                                                                          |
+| **Return / Cancel**   | Both operations in `AdminManager` open a transaction: first restore `avail_stock` via a joined `UPDATE equipment … JOIN rental_details`, then set the rental `status`. Rollback fires on any exception.                                                                                                                                                                                                                           |
+| **Soft delete**       | `AdminManager.DeleteEquipment()` sets `is_active = 0` rather than removing the row, preserving `rental_details` FK references for historical bookings. The kiosk query includes `WHERE is_active = 1` to hide deactivated items.                                                                                                                                                                                                  |
+| **Configuration**     | `DBConnection.GetConnection()` reads the `TwoCRentals` key from `App.config` and returns a `MySqlConnection`. This is the single place where the connection string is consumed — changing a server hostname or credentials requires editing only one XML file.                                                                                                                                                                    |
 
-All SQL commands use **parameterized queries** (`cmd.Parameters.AddWithValue`) throughout, preventing SQL injection.
+---
+
+## Database Schema
+
+```
+customers
+  customer_id (PK) | full_name | contact_no | created_at
+
+equipment
+  equipment_id (PK) | name | category | daily_rate
+  total_stock | avail_stock | icon_tag | is_active
+
+rentals
+  rental_id (PK) | booking_code (UNIQUE) | customer_id (FK)
+  rental_start | rental_end | security_dep | subtotal
+  total_amount | status | created_at
+
+rental_details
+  detail_id (PK) | rental_id (FK) | equipment_id (FK)
+  quantity | daily_rate | days_rented | line_total
+
+admins
+  admin_id (PK) | username (UNIQUE) | password_hash | full_name
+```
+
+Rental `status` values: `Active` → `Overdue` (auto) → `Returned` or `Cancelled`.
 
 ---
 
@@ -64,42 +96,47 @@ All SQL commands use **parameterized queries** (`cmd.Parameters.AddWithValue`) t
 
 ```
 ERS/
-├── ERS.slnx                      # Solution file
+├── ERS.slnx                       # Visual Studio solution file
 └── ERS/
-    ├── App.config                 # MySQL connection string
-    ├── ERS.vbproj                 # SDK-style project (targets, NuGet refs)
-    ├── setup_database.sql         # Schema creation + seed data
+    ├── App.config                  # Connection string (key: TwoCRentals)
+    ├── ERS.vbproj                  # SDK-style project — framework, NuGet refs
+    ├── setup_database.sql          # Full schema creation + seed data
     │
-    ├── ── Models ──
-    ├── EquipmentItem.vb           # Equipment record POCO (includes IsAvailable)
-    ├── CartItem.vb                # Cart line item (Quantity + LineTotal helper)
+    ├── ── Data Models ──
+    ├── EquipmentItem.vb            # POCO: equipment fields + IsAvailable property
+    ├── CartItem.vb                 # POCO: holds EquipmentItem ref, qty, LineTotal()
     │
-    ├── ── Data / Business Layer ──
-    ├── DBConnection.vb            # MySqlConnection factory from App.config
-    ├── RentalManager.vb           # Catalog queries & atomic booking transaction
-    ├── AdminManager.vb            # Auth, dashboard stats, rental & equipment CRUD
-    ├── HashHelper.vb              # SHA-256 password hash utility
+    ├── ── Business / Service Layer ──
+    ├── DBConnection.vb             # Factory: returns MySqlConnection from App.config
+    ├── HashHelper.vb               # Utility: SHA-256 hex-string computation
+    ├── RentalManager.vb            # Customer ops: load catalog, CreateBooking()
+    ├── AdminManager.vb             # Admin ops: auth, stats, rental CRUD, equipment CRUD
     │
     ├── ── Customer Forms ──
-    ├── FrmKiosk.vb                # Self-service equipment browser & cart
-    ├── FrmKiosk.Designer.vb       # Static WinForms designer controls
-    ├── FrmCheckout.vb             # Customer info & rental date entry
-    ├── FrmConfirmation.vb         # Booking confirmation screen
+    ├── FrmKiosk.vb                 # Equipment browser, cart, rental-days stepper
+    ├── FrmKiosk.Designer.vb        # Designer-managed controls (static layout)
+    ├── FrmCheckout.vb              # Customer name/contact + date pickers
+    ├── FrmConfirmation.vb          # Booking confirmed screen (shows booking code)
     │
     ├── ── Admin Forms ──
-    ├── FrmAdminLogin.vb           # Admin credential entry
-    ├── FrmAdminDashboard.vb       # Rental overview with return/cancel actions
-    ├── FrmManageEquipment.vb      # Equipment CRUD panel
+    ├── FrmAdminLogin.vb            # Username + password entry
+    ├── FrmAdminDashboard.vb        # Stats cards + rentals grid + return/cancel
+    ├── FrmManageEquipment.vb       # Equipment CRUD (name, category, rate, stock, icon)
     │
     └── My Project/
-        └── Application.myapp      # WinForms application entry-point config
+        └── Application.myapp       # WinForms startup configuration
 ```
 
-**Key design notes:**
+### Designer vs. runtime controls in `FrmKiosk`
 
-- `RentalManager` and `AdminManager` are `NotInheritable` classes with private constructors, acting as static service classes. All SQL lives here, keeping form code free of data access logic.
-- `FrmKiosk.Designer.vb` holds static layout controls (panels, header, cart sidebar, stepper buttons). The code-behind `FrmKiosk.vb` builds dynamic content (equipment cards, filter pills, cart rows) at runtime — these are **not visible** in the Visual Studio designer.
-- Equipment deletion is a **soft delete** (`is_active = 0`), preserving referential integrity with historical rentals.
+`FrmKiosk.Designer.vb` contains the static skeleton: the header bar, left content panel, right cart sidebar, rental-days stepper (`btnDaysDown` / `lblDaysValue` / `btnDaysUp`), and action buttons. Everything data-driven is built at runtime in `FrmKiosk.vb`:
+
+- `AddFilterPills()` — creates pill-shaped `Button` controls for each category at startup.
+- `RenderGrid()` — builds a rounded card `Panel` per equipment item, complete with icon label, name, rate, stock badge, and an **Add** button.
+- `RefreshCartUI()` — rebuilds cart rows with inline `+` / `−` quantity controls and calls `RecalcTotals()`.
+- `RecalcTotals()` — recomputes every line and the grand total live whenever quantity or rental days change.
+
+These runtime-generated controls are **not visible in the Visual Studio Forms Designer** — this is expected behavior.
 
 ---
 
@@ -107,30 +144,30 @@ ERS/
 
 ### Prerequisites
 
-| Requirement                                                 | Notes                                   |
-| ----------------------------------------------------------- | --------------------------------------- |
-| [.NET SDK 10.0+](https://dotnet.microsoft.com/download)     | Required to build and run               |
-| [MySQL Server 8.0+](https://dev.mysql.com/downloads/mysql/) | Must be running locally                 |
-| **Windows OS**                                              | WinForms targets `net10.0-windows` only |
+| Requirement                                            | Version                                            |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| [.NET SDK](https://dotnet.microsoft.com/download)      | 10.0 or later                                      |
+| [MySQL Server](https://dev.mysql.com/downloads/mysql/) | 8.0 or later                                       |
+| Windows OS                                             | Required — WinForms only runs on `net10.0-windows` |
 
-### 1. Clone the Repository
+### Step 1 — Clone
 
 ```bash
 git clone https://github.com/Tways-study/Equipment-Rental-System.git
 cd Equipment-Rental-System
 ```
 
-### 2. Create the Database
+### Step 2 — Create the database
 
-Run the provided script against your MySQL server. This creates the `twoc_rentals_db` database, all required tables, sample equipment rows, and the default admin account:
+The script creates the `twoc_rentals_db` database, all five tables, six sample equipment items, and the default admin account:
 
 ```bash
-mysql -u YOUR_USER -p < ERS/setup_database.sql
+mysql -u YOUR_MYSQL_USER -p < ERS/setup_database.sql
 ```
 
-### 3. Configure the Connection String
+### Step 3 — Configure the connection string
 
-Open `ERS/App.config` and update the credentials to match your MySQL installation:
+Open `ERS/App.config` and set your MySQL credentials:
 
 ```xml
 <connectionStrings>
@@ -140,17 +177,15 @@ Open `ERS/App.config` and update the credentials to match your MySQL installatio
 </connectionStrings>
 ```
 
-> **Note:** `CharSet=utf8mb4` is required to correctly display emoji icon tags stored in the `equipment` table.
+> `CharSet=utf8mb4` is required — equipment icon tags are stored as emoji in the database.
 
-### 4. Restore NuGet Packages
-
-Restore all dependencies declared in `ERS.vbproj`:
+### Step 4 — Restore NuGet packages
 
 ```bash
 dotnet restore
 ```
 
-This downloads `MySql.Data` (v9.6.0) and `System.Configuration.ConfigurationManager` (v9.0.4).
+This fetches `MySql.Data` (v9.6.0) and `System.Configuration.ConfigurationManager` (v9.0.4).
 
 ---
 
@@ -158,45 +193,46 @@ This downloads `MySql.Data` (v9.6.0) and `System.Configuration.ConfigurationMana
 
 ### Development
 
-Build and launch the application:
-
 ```bash
 dotnet run --project ERS/ERS.vbproj
 ```
 
-The kiosk form (`FrmKiosk`) opens by default. Press **F12** on the kiosk screen to access the admin login dialog.
+`FrmKiosk` opens as the startup form. Press **F12** anywhere on the kiosk to open the admin login dialog.
 
-**Default admin credentials:**
+### Production — self-contained publish
 
-| Field    | Value      |
-| -------- | ---------- |
-| Username | `****`    |
-| Password | `****` |
-
-> Change the admin password after first login. To add additional admin accounts via SQL:
->
-> ```sql
-> INSERT INTO admins (username, password_hash, full_name)
-> VALUES ('newuser', SHA2('yourpassword', 256), 'Full Name');
-> ```
-
-### Production Build
-
-Compile a self-contained Windows binary that does not require a separate .NET installation on the target machine:
+Produces a folder that can be copied to any Windows machine without a .NET runtime pre-installed:
 
 ```bash
 dotnet publish ERS/ERS.vbproj -c Release -r win-x64 --self-contained true
 ```
 
-Output is placed in `ERS/bin/Release/net10.0-windows/win-x64/publish/`. Copy this folder to the deployment machine and run `ERS.exe`.
+Output: `ERS/bin/Release/net10.0-windows/win-x64/publish/ERS.exe`
+
+---
+
+## Default Admin Credentials
+
+| Field    | Value      |
+| -------- | ---------- |
+| Username | `admin`    |
+| Password | `admin123` |
+
+> Change the default password after first login. To provision additional admin accounts:
+>
+> ```sql
+> INSERT INTO admins (username, password_hash, full_name)
+> VALUES ('newuser', SHA2('your_chosen_password', 256), 'Full Name');
+> ```
 
 ---
 
 ## Troubleshooting
 
-| Issue                                                 | Resolution                                                                                         |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Build fails with `MSB3027`/`MSB3021` file-lock errors | Ensure no running instance of `ERS.exe` is open. Close it and rebuild.                             |
-| Equipment icons display as `?`                        | Verify `CharSet=utf8mb4` is set in `App.config` and the MySQL server collation supports `utf8mb4`. |
-| `MySqlException: Access denied` on startup            | Check `Uid` and `Pwd` in `App.config` match your MySQL user credentials.                           |
-| Database not found                                    | Confirm `setup_database.sql` was executed successfully against the correct MySQL server.           |
+| Symptom                                         | Fix                                                                                                      |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Build error `MSB3027` / `MSB3021` (file locked) | Close any running instance of `ERS.exe` before rebuilding.                                               |
+| Equipment icons show as `?` boxes               | Ensure `CharSet=utf8mb4` is in the connection string and your MySQL instance uses a `utf8mb4` collation. |
+| `MySqlException: Access denied` on launch       | Verify `Uid` and `Pwd` in `App.config` against your MySQL user.                                          |
+| `Unknown database 'twoc_rentals_db'`            | Re-run `setup_database.sql` against the correct MySQL server instance.                                   |
+| Dynamic cards/pills missing at runtime          | These controls are built in code, not the designer — this is expected. Run the project to see them.      |
