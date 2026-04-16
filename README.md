@@ -213,10 +213,10 @@ Output: `ERS/bin/Release/net10.0-windows/win-x64/publish/ERS.exe`
 
 ## Default Admin Credentials
 
-| Field    | Value      |
-| -------- | ---------- |
-| Username | `admin`    |
-| Password | `admin123` |
+| Field    | Value                                                        |
+| -------- | ------------------------------------------------------------ |
+| Username | `admin`                                                      |
+| Password | _(see `setup_database.sql` — change this after first login)_ |
 
 > Change the default password after first login. To provision additional admin accounts:
 >
