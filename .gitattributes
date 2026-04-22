@@ -1,0 +1,12 @@
+# Treat resx files as binary to prevent line-ending normalization from corrupting embedded base64 image data
+*.resx binary
+
+# Common binary file types
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.exe binary
+*.dll binary
