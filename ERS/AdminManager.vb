@@ -33,6 +33,7 @@ Public NotInheritable Class AdminManager
         Dim a, o, t As Integer
         Using conn = DBConnection.GetConnection()
             conn.Open()
+            ' Each query is run on the same open connection to avoid three separate connection round-trips
             Using cmd As New MySqlCommand("SELECT COUNT(*) FROM rentals WHERE status='Active'", conn)
                 a = Convert.ToInt32(cmd.ExecuteScalar())
             End Using
@@ -48,9 +49,11 @@ Public NotInheritable Class AdminManager
 
     ''' <summary>Load rentals, optionally filtered by status.</summary>
     Public Shared Function LoadRentals(Optional statusFilter As String = Nothing) As DataTable
+        ' Base query joins rentals with customers so the grid shows readable names
         Dim sql = "SELECT r.rental_id, r.booking_code, c.full_name, c.contact_no, " &
                   "r.rental_start, r.rental_end, r.subtotal, r.total_amount, r.status " &
                   "FROM rentals r INNER JOIN customers c ON r.customer_id = c.customer_id"
+        ' Append WHERE clause only when a specific status tab is selected
         If Not String.IsNullOrEmpty(statusFilter) Then
             sql &= " WHERE r.status = @st"
         End If
@@ -131,6 +134,7 @@ Public NotInheritable Class AdminManager
 
     ' ==================== EQUIPMENT CRUD ====================
 
+    ' Returns every equipment row (active and inactive) for the management grid.
     Public Shared Function LoadAllEquipment() As DataTable
         Dim dt As New DataTable()
         Using conn = DBConnection.GetConnection(), cmd As New MySqlCommand(
@@ -160,6 +164,8 @@ Public NotInheritable Class AdminManager
         Using conn = DBConnection.GetConnection(), cmd As New MySqlCommand(
             "UPDATE equipment SET name=@n, category=@c, daily_rate=@r, total_stock=@ts, " &
             "avail_stock = avail_stock + (@ts - total_stock), icon_tag=@i WHERE equipment_id=@id", conn)
+            ' avail_stock is adjusted by the delta so that units already out on rental
+            ' are not accidentally counted as available when the total stock changes.
             cmd.Parameters.AddWithValue("@n", name)
             cmd.Parameters.AddWithValue("@c", category)
             cmd.Parameters.AddWithValue("@r", dailyRate)
@@ -171,6 +177,8 @@ Public NotInheritable Class AdminManager
         End Using
     End Sub
 
+    ' Soft-deletes the item: sets is_active = 0 instead of physically removing the row
+    ' so historical rental records that reference the equipment remain intact.
     Public Shared Sub DeleteEquipment(eqId As Integer)
         Using conn = DBConnection.GetConnection(), cmd As New MySqlCommand(
             "UPDATE equipment SET is_active = 0 WHERE equipment_id = @id", conn)

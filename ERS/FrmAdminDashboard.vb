@@ -116,12 +116,14 @@ Public Class FrmAdminDashboard
 
     Private Sub RefreshData()
         Try
+            ' Auto-flag any rentals whose end date has passed before updating the stat cards
             AdminManager.UpdateOverdueRentals()
             Dim stats = AdminManager.GetStats()
             lblActive.Text = stats.Active.ToString()
             lblOverdue.Text = stats.Overdue.ToString()
             lblToday.Text = stats.TodayBookings.ToString()
 
+            ' Pass Nothing to LoadRentals when "All" is selected so no WHERE clause is added
             Dim filter As String = Nothing
             If cmbFilter.SelectedItem IsNot Nothing AndAlso cmbFilter.SelectedItem.ToString() <> "All" Then
                 filter = cmbFilter.SelectedItem.ToString()
@@ -143,6 +145,7 @@ Public Class FrmAdminDashboard
             Return
         End If
 
+        ' Prevent returning a rental that is already closed
         Dim status = dgvRentals.CurrentRow.Cells("status").Value.ToString()
         If status = "Returned" OrElse status = "Cancelled" Then
             MessageBox.Show($"This rental is already {status}.", "Info",
@@ -202,6 +205,9 @@ Public Class FrmAdminDashboard
         End If
     End Sub
 
+    ' Creates a small white card in the stats strip.
+    ' Returns the value Label so the caller can update the number later without
+    ' needing to traverse the control tree.
     Private Function MakeStatCard(host As FlowLayoutPanel, title As String, value As String, accent As Color) As Label
         Dim card As New Panel With {
             .Size = New Size(210, 68), .BackColor = Color.White,

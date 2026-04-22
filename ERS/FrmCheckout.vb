@@ -112,6 +112,7 @@ Public Class FrmCheckout
     End Sub
 
     Private Sub Dates_Changed(sender As Object, e As EventArgs)
+        ' Enforce that the end date is always at least one day after the start date
         If dtpEnd.Value <= dtpStart.Value Then
             dtpEnd.Value = dtpStart.Value.AddDays(1)
         End If
@@ -119,8 +120,9 @@ Public Class FrmCheckout
     End Sub
 
     Private Sub UpdateSummary()
+        ' Recalculate whenever dates change so the customer always sees the current total
         Dim days As Integer = (dtpEnd.Value.Date - dtpStart.Value.Date).Days
-        If days <= 0 Then days = 1
+        If days <= 0 Then days = 1  ' Fallback safety; date picker should prevent this
 
         Dim sb As New System.Text.StringBuilder()
         Dim subtotal As Decimal = 0D
@@ -148,6 +150,8 @@ Public Class FrmCheckout
         End If
 
         Try
+            ' Delegate the entire booking transaction to RentalManager.
+            ' On success it returns a unique booking code; on stock conflict it throws InvalidOperationException.
             Dim bookingCode = RentalManager.CreateBooking(
                 txtName.Text.Trim(), txtContact.Text.Trim(),
                 dtpStart.Value.Date, dtpEnd.Value.Date, _cart)
@@ -155,6 +159,8 @@ Public Class FrmCheckout
             Dim days = (dtpEnd.Value.Date - dtpStart.Value.Date).Days
             Dim subtotal As Decimal = _cart.Sum(Function(ci) ci.Equipment.DailyRate * ci.Quantity * days)
 
+            ' Set DialogResult before showing the confirmation dialog so the kiosk knows
+            ' to clear the cart and refresh the catalog when this form closes.
             Dim confirm As New FrmConfirmation(bookingCode, txtName.Text.Trim(), subtotal + 500D)
             Me.DialogResult = DialogResult.OK
             confirm.ShowDialog(Me.Owner)

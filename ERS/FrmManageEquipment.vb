@@ -116,6 +116,8 @@ Public Class FrmManageEquipment
         End Try
     End Sub
 
+    ' Populate the form fields from the selected grid row so the admin
+    ' can review values before deciding to update or delete.
     Private Sub Dgv_SelectionChanged(sender As Object, e As EventArgs)
         If dgv.CurrentRow Is Nothing Then Return
         txtName.Text = dgv.CurrentRow.Cells("name").Value.ToString()
@@ -130,6 +132,7 @@ Public Class FrmManageEquipment
     Private Sub BtnAdd_Click(sender As Object, e As EventArgs)
         If Not ValidateInputs() Then Return
         Try
+            ' Use a generic box emoji as the default icon if the admin left the field blank
             AdminManager.AddEquipment(txtName.Text.Trim(), cmbCategory.SelectedItem.ToString(),
                 CDec(txtRate.Text), CInt(txtStock.Text), If(txtIcon.Text.Trim() = "", "📦", txtIcon.Text.Trim()))
             RefreshGrid()
@@ -156,6 +159,7 @@ Public Class FrmManageEquipment
         If dgv.CurrentRow Is Nothing Then Return
         Dim eqId = Convert.ToInt32(dgv.CurrentRow.Cells("equipment_id").Value)
         Dim nm = dgv.CurrentRow.Cells("name").Value.ToString()
+        ' Confirm before deactivating – this is a soft-delete, the row is not physically removed
         If MessageBox.Show($"Deactivate '{nm}'?", "Confirm",
                            MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
             Try

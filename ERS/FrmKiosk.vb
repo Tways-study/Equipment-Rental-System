@@ -32,6 +32,7 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub RefreshCatalog()
+        ' Fetch equipment from DB (filtered by category if a pill is active)
         Try
             _allEquipment = RentalManager.LoadEquipment(_currentCategory)
         Catch ex As Exception
@@ -44,17 +45,19 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub RenderGrid()
+        ' Suspend layout to batch all control additions – avoids repeated redraws
         pnlGrid.SuspendLayout()
         pnlGrid.Controls.Clear()
 
         Dim cardW = 230
         Dim cardH = 190
 
+        ' Build one card panel per equipment item
         For Each eq In _allEquipment
             Dim card As New Panel With {
                 .Size = New Size(cardW, cardH), .BackColor = CardColor,
                 .Margin = New Padding(8), .Padding = New Padding(10),
-                .Tag = eq}
+                .Tag = eq}  ' Store the equipment object so click handlers can retrieve it
             card.Region = CreateRoundRegion(cardW, cardH, 10)
 
             ' Shadow-ish border
@@ -91,6 +94,7 @@ Partial Class FrmKiosk
             card.Controls.Add(lblStock)
 
             If eq.IsAvailable Then
+                ' Equipment is in stock: show an actionable Add to Cart button
                 Dim btnAdd As New Button With {
                     .Text = "Add to Cart", .Size = New Size(cardW - 30, 36),
                     .Location = New Point(15, 128), .FlatStyle = FlatStyle.Flat,
@@ -101,6 +105,7 @@ Partial Class FrmKiosk
                 AddHandler btnAdd.Click, AddressOf BtnAdd_Click
                 card.Controls.Add(btnAdd)
             Else
+                ' Equipment is unavailable: show a greyed-out badge instead of the button
                 Dim lblOOS As New Label With {
                     .Text = "Out of Stock", .Size = New Size(cardW - 30, 36),
                     .Location = New Point(15, 128),
@@ -128,6 +133,7 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub HighlightActiveFilter()
+        ' Toggle pill colours: navy fill = active, white fill = inactive
         Dim pills = {btnPillAllGear, btnPillSeating, btnPillAudioVisual, btnPillTables}
         For Each pill In pills
             Dim isActive = (pill.Tag.ToString() = If(_currentCategory, "All Gear"))
@@ -142,6 +148,8 @@ Partial Class FrmKiosk
     Private Sub BtnAdd_Click(sender As Object, e As EventArgs)
         Dim eq = DirectCast(DirectCast(sender, Button).Tag, EquipmentItem)
 
+        ' If the item is already in the cart, increment its quantity (up to available stock);
+        ' otherwise create a new CartItem entry.
         Dim existing = _cart.FirstOrDefault(Function(ci) ci.Equipment.EquipmentId = eq.EquipmentId)
         If existing IsNot Nothing Then
             If existing.Quantity < eq.AvailStock Then
@@ -230,6 +238,7 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub RecalcTotals()
+        ' Daily subtotal × rental days gives the equipment cost; a fixed ₱500 deposit is added on top.
         Dim dailySub As Decimal = _cart.Sum(Function(ci) ci.Equipment.DailyRate * ci.Quantity)
         Dim sub1 As Decimal = dailySub * _rentalDays
         lblSubtotal.Text = $"Subtotal: ₱{sub1:N2}  ({_rentalDays}d)"
@@ -240,6 +249,8 @@ Partial Class FrmKiosk
     ' ============================================================
     '  GREEN TOAST
     ' ============================================================
+    ' Displays a temporary green status bar at the bottom of the kiosk window.
+    ' The label auto-removes itself after 2 seconds via a one-shot Timer.
     Private Sub ShowToast(msg As String)
         Dim toast As New Label With {
             .Text = msg, .AutoSize = False, .Size = New Size(300, 36),
@@ -312,6 +323,9 @@ Partial Class FrmKiosk
     ' ============================================================
     '  F12 → ADMIN
     ' ============================================================
+    ' Hidden shortcut: pressing F12 on the kiosk screen opens the admin login.
+    ' After a successful login the dashboard is shown as a modal dialog.
+    ' The catalog is refreshed on close in case equipment was changed.
     Protected Overrides Sub OnKeyDown(e As KeyEventArgs)
         MyBase.OnKeyDown(e)
         If e.KeyCode = Keys.F12 Then
@@ -327,6 +341,8 @@ Partial Class FrmKiosk
     ' ============================================================
     '  HELPERS
     ' ============================================================
+    ' Builds a rounded-rectangle clipping Region used to give card panels soft corners.
+    ' w/h = panel dimensions, r = corner radius in pixels.
     Private Shared Function CreateRoundRegion(w As Integer, h As Integer, r As Integer) As Region
         Dim gp As New GraphicsPath()
         gp.AddArc(0, 0, r, r, 180, 90)

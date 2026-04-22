@@ -59,6 +59,7 @@ Public Class FrmAdminLogin
     End Sub
 
     Private Sub BtnLogin_Click(sender As Object, e As EventArgs)
+        ' Basic presence check before hitting the database
         If String.IsNullOrWhiteSpace(txtUser.Text) OrElse String.IsNullOrWhiteSpace(txtPass.Text) Then
             MessageBox.Show("Please enter username and password.", "Validation",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -66,8 +67,11 @@ Public Class FrmAdminLogin
         End If
 
         Try
+            ' ValidateLogin hashes the password internally; it returns the admin's full name on
+            ' success, or Nothing if the credentials don't match any record.
             Dim fullName = AdminManager.ValidateLogin(txtUser.Text.Trim(), txtPass.Text)
             If fullName IsNot Nothing Then
+                ' Signal success to the caller (FrmKiosk) via DialogResult
                 DialogResult = DialogResult.OK
                 Close()
             Else

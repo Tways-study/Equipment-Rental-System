@@ -7,7 +7,9 @@ Public NotInheritable Class RentalManager
     ''' <summary>Load all active equipment, optionally filtered by category.</summary>
     Public Shared Function LoadEquipment(Optional category As String = Nothing) As List(Of EquipmentItem)
         Dim items As New List(Of EquipmentItem)()
+        ' Only show items where is_active = 1; deactivated equipment is hidden from customers
         Dim sql As String = "SELECT equipment_id, name, category, daily_rate, total_stock, avail_stock, icon_tag, is_active FROM equipment WHERE is_active = 1"
+        ' Append category filter only when a pill other than "All Gear" is selected
         If Not String.IsNullOrEmpty(category) Then
             sql &= " AND category = @cat"
         End If
@@ -47,15 +49,17 @@ Public NotInheritable Class RentalManager
             rentalEnd As Date,
             cart As List(Of CartItem)) As String
 
+        ' Guard clauses: catch invalid input before touching the database
         Dim days As Integer = (rentalEnd - rentalStart).Days
         If days <= 0 Then Throw New ArgumentException("End date must be after start date.")
         If cart.Count = 0 Then Throw New ArgumentException("Cart is empty.")
 
+        ' Calculate totals before opening a DB connection
         Dim subtotal As Decimal = 0D
         For Each ci In cart
             subtotal += ci.Equipment.DailyRate * ci.Quantity * days
         Next
-        Dim securityDep As Decimal = 500D
+        Dim securityDep As Decimal = 500D  ' Fixed deposit charged on every booking
         Dim total As Decimal = subtotal + securityDep
 
         Dim bookingCode As String = GenerateBookingCode()
@@ -127,6 +131,9 @@ Public NotInheritable Class RentalManager
         End Using
     End Function
 
+    ' Generates a unique booking code in the format BK-YYYYMMDD-NNNN.
+    ' The sequence number resets each day and is based on how many bookings
+    ' already exist for today, so codes are always chronologically sortable.
     Private Shared Function GenerateBookingCode() As String
         Dim datePart As String = DateTime.Now.ToString("yyyyMMdd")
         Dim seq As Integer = 1
@@ -135,9 +142,9 @@ Public NotInheritable Class RentalManager
             "SELECT COUNT(*) FROM rentals WHERE booking_code LIKE @pat", conn)
             cmd.Parameters.AddWithValue("@pat", $"BK-{datePart}-%")
             conn.Open()
-            seq = Convert.ToInt32(cmd.ExecuteScalar()) + 1
+            seq = Convert.ToInt32(cmd.ExecuteScalar()) + 1  ' Next sequence number for today
         End Using
 
-        Return $"BK-{datePart}-{seq:D4}"
+        Return $"BK-{datePart}-{seq:D4}"  ' e.g. BK-20250715-0003
     End Function
 End Class
