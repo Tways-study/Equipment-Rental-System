@@ -21,26 +21,6 @@ Partial Class FrmKiosk
     ' ============================================================
     Public Sub New()
         InitializeComponent()
-        AddFilterPills()
-    End Sub
-
-    ' ── Build the four category filter pills into pnlFilterBar ──
-    Private Sub AddFilterPills()
-        Dim cats = {"All Gear", "Seating", "Audio/Visual", "Tables"}
-        For Each c In cats
-            Dim pill As New Button With {
-                .Text = c, .AutoSize = True,
-                .FlatStyle = FlatStyle.Flat, .Cursor = Cursors.Hand,
-                .BackColor = CardColor, .ForeColor = NavyColor,
-                .Font = New Font("Segoe UI", 9, FontStyle.Bold),
-                .Margin = New Padding(0, 4, 8, 4),
-                .Padding = New Padding(12, 4, 12, 4),
-                .Tag = c}
-            pill.FlatAppearance.BorderColor = NavyColor
-            pill.FlatAppearance.BorderSize = 1
-            AddHandler pill.Click, AddressOf FilterPill_Click
-            pnlFilterBar.Controls.Add(pill)
-        Next
     End Sub
 
     ' ============================================================
@@ -139,7 +119,8 @@ Partial Class FrmKiosk
     ' ============================================================
     '  FILTER PILLS
     ' ============================================================
-    Private Sub FilterPill_Click(sender As Object, e As EventArgs)
+    Private Sub FilterPill_Click(sender As Object, e As EventArgs) _
+        Handles btnPillAllGear.Click, btnPillSeating.Click, btnPillAudioVisual.Click, btnPillTables.Click
         Dim pill = DirectCast(sender, Button)
         Dim cat = pill.Tag.ToString()
         _currentCategory = If(cat = "All Gear", Nothing, cat)
@@ -147,10 +128,11 @@ Partial Class FrmKiosk
     End Sub
 
     Private Sub HighlightActiveFilter()
-        For Each ctl In pnlFilterBar.Controls.OfType(Of Button)()
-            Dim isActive = (ctl.Tag.ToString() = If(_currentCategory, "All Gear"))
-            ctl.BackColor = If(isActive, NavyColor, CardColor)
-            ctl.ForeColor = If(isActive, Color.White, NavyColor)
+        Dim pills = {btnPillAllGear, btnPillSeating, btnPillAudioVisual, btnPillTables}
+        For Each pill In pills
+            Dim isActive = (pill.Tag.ToString() = If(_currentCategory, "All Gear"))
+            pill.BackColor = If(isActive, NavyColor, CardColor)
+            pill.ForeColor = If(isActive, Color.White, NavyColor)
         Next
     End Sub
 
